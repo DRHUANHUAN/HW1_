@@ -53,7 +53,18 @@ def train(args, model, optimizer, scheduler=None, model_name='model'):
             # Function Outputs:
             #   - `output`: Computed loss, a single floating point number
             ##################################################################
-            loss = 0
+            #loss = 0
+            # Apply sigmoid activation to logits to get predicted probabilities
+            predicted_probs = torch.sigmoid(output)
+
+            # Avoid potential numerical instability by clipping probabilities
+            predicted_probs = torch.clamp(predicted_probs, min=1e-7, max=1 - 1e-7)
+
+            # Compute the binary cross-entropy loss element-wise
+            loss = -wgt * (target * torch.log(predicted_probs) + (1 - target) * torch.log(1 - predicted_probs))
+
+            # Compute the average loss across all samples
+            loss = torch.mean(loss)
             ##################################################################
             #                          END OF YOUR CODE                      #
             ##################################################################
