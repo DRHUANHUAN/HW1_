@@ -71,6 +71,14 @@ class VOCDataset(Dataset):
             # The weight vector should be a 20-dimensional vector with weight[i] = 0 iff an object of class i has the `difficult` attribute set to 1 in the XML file and 1 otherwise
             # The difficult attribute specifies whether a class is ambiguous and by setting its weight to zero it does not contribute to the loss during training 
             weight_vec = torch.ones(20)
+            for objectTag in tree.getroot().findall("object"):
+                class_name = objectTag.find("name").text
+                difficult = int(objectTag.find("difficult").text)
+                class_idx = self.get_class_index(class_name)
+                
+                class_vec[class_idx] = 1
+                weight_vec[class_idx] = 0 if difficult == 1 else 1
+
 
             ######################################################################
             #                            END OF YOUR CODE                        #
@@ -92,7 +100,13 @@ class VOCDataset(Dataset):
         # change and you will have to write the correct value of `flat_dim`
         # in line 46 in simple_cnn.py
         ######################################################################
-        pass
+        augmentations = []
+        augmentations.append(transforms.RandomHorizontalFlip(p=0.5))
+        augmentations.append(transforms.RandomVerticalFlip(p=0.5))
+        augmentations.append(transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1))
+        augmentations.append(transforms.CenterCrop(size=(self.size, self.size)))
+        return augmentations
+        #pass
         ######################################################################
         #                            END OF YOUR CODE                        #
         ######################################################################
